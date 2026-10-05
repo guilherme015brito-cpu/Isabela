@@ -79,3 +79,7 @@ Vercel: versão nova confirmada em produção; teste de navegador390×844 sem ro
 Passaram oito verificações específicas dos filtros: abrir/recolher, estado preservado, busca combinada com categoria/cor/status/datas, intervalo de tarefas, limpeza dos filtros, criação e importação acessíveis. Também passaram os 22 grupos gerais, 13 de calendário mobile e a verificação de instalação do iPhone.
 
 A tabela `public.app_healthcheck` foi criada no projeto Supabase informado. A consulta REST retornou HTTP 200 e a linha `id=1`. Conferidos no banco: RLS ativo, `anon` com SELECT e sem INSERT, UPDATE ou DELETE. A URL foi configurada como variável e a chave publishable como secret no repositório GitHub.
+
+Workflow ativo e primeira execução manual concluída com sucesso: [run 37376986565](https://github.com/guilherme015brito-cpu/Isabela/actions/runs/37376986565). As três consultas foram confirmadas no runner do GitHub. Programado diariamente às 09:17 no fuso America/Sao_Paulo. A sincronização dos dados do app ainda não faz parte desta configuração.
+
+Layout publicado conferido no Edge: painel aberto em viewports de 390×844 e 320×844, sem rolagem horizontal (375=375 e 305=305 px de largura efetiva). Campos com fonte 16px e altura 46px. Categoria, status e datas combinados mantiveram o painel aberto e retornaram a tarefa de teste correta; limpar voltou ao padrão. Desktop sem rolagem horizontal (1358=1358 px), com busca e seletores na primeira linha e datas/importação na segunda. Não houve teste em iPhone físico. Captura: `filtros-tarefas-mobile.jpg`.
