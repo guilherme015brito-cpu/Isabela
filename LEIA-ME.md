@@ -21,9 +21,11 @@ Isabela: cozinha na 1ª e 3ª semanas; banheiro na 2ª e 4ª semanas; lavanderia
 
 O reconhecimento automático identifica a grade, corrige a perspectiva e lê cada célula separadamente em tabelas como a fornecida. A foto enviada passou no teste real: todas as cinco atribuições de Isabela foram reconhecidas. Fotos inclinadas, borradas ou com outro formato podem exigir preenchimento manual. A foto e o texto reconhecido não são armazenados nem enviados para um serviço de IA.
 
-## Próxima etapa: Supabase
+## Supabase
 
-A lógica de dados está centralizada em `db` e `save()` no arquivo `dist/app.js`. Não há integração, credenciais ou banco remoto nesta versão. A migração deve incluir tarefas, categorias, bancos, transações, projetos, configurações e lotes de importação. A versão hospedada pelo Sites é privada e pode exigir o acesso da conta proprietária; essa proteção é da hospedagem, não uma tela de login implementada no app.
+A lógica de dados está centralizada em `db` e `save()` no arquivo `dist/app.js`. Os dados do app continuam locais; a sincronização futura deve incluir tarefas, categorias, bancos, transações, projetos, configurações e lotes de importação. O projeto Supabase informado foi configurado com uma tabela exclusiva de verificação e um ping diário no GitHub Actions às 09:17, horário de São Paulo. Consulte `SUPABASE-PING.md` para configuração e limites.
+
+O app está publicado em https://isabela-meu-espaco.vercel.app/ com os arquivos do repositório GitHub Isabela.
 
 ## Arquivos
 

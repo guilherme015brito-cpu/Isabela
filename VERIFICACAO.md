@@ -60,7 +60,7 @@ Os testes simulam o gesto de swipe; não foi testado em um celular físico. A re
 
 ## Dados e acesso
 
-O app continua usando armazenamento local. A versão desta pasta não depende de Supabase. A publicação no Sites não foi concluída por causa do bloqueio de permissões já registrado na conversa. A prévia local é http://127.0.0.1:4173/ enquanto o servidor estiver ativo.
+O app continua usando armazenamento local. Está publicado no Vercel em https://isabela-meu-espaco.vercel.app/. O projeto Supabase tem uma tabela exclusiva para o ping diário; a sincronização das tarefas e finanças ainda não foi implementada.
 
 Logo/PWA: tamanhos dos três ícones do manifest conferidos, scripts de instalação e service worker validados; os 21 grupos de testes continuam passando. Instalação real e push no iPhone ainda não testados. Consulte INSTALAR-NO-IPHONE.md.
 
@@ -71,3 +71,11 @@ Importação corrigida: avisos dentro do dialog, confirmação acessível para e
 Preferências de notificações: 22 grupos passaram. Verificados salvamento local, recarregamento, categorias/dias, horários duplicados, faixa de repetição inválida e desativação preservando as escolhas. Formulário e confirmação de salvamento também verificados no Edge.
 
 Calendário mobile: 13 verificações específicas passaram, além dos 22 grupos gerais e teste de instalação. Corrigidas as trocas Mês→Semana/15dias para preservar o dia escolhido. Espaçamento atualizado conforme a imagem do iPhone: semanas com altura fixa, divisórias discretas, até duas etiquetas e contador de excedentes. Manifest, ícone Apple e HTML publicados verificados por HTTP200. A instalação real no iPhone depende do aparelho.
+
+Vercel: versão nova confirmada em produção; teste de navegador390×844 sem rolagemhorizontal(clientWidth375=scrollWidth375), semanas110px, toque→lista do dia, criação na dataescolhida, detalhes e conclusão removendo etiqueta. Ajuda Isabela na Tela de Início visível nas Configurações.
+
+## Filtros mobile e ping diário
+
+Passaram oito verificações específicas dos filtros: abrir/recolher, estado preservado, busca combinada com categoria/cor/status/datas, intervalo de tarefas, limpeza dos filtros, criação e importação acessíveis. Também passaram os 22 grupos gerais, 13 de calendário mobile e a verificação de instalação do iPhone.
+
+A tabela `public.app_healthcheck` foi criada no projeto Supabase informado. A consulta REST retornou HTTP 200 e a linha `id=1`. Conferidos no banco: RLS ativo, `anon` com SELECT e sem INSERT, UPDATE ou DELETE. A URL foi configurada como variável e a chave publishable como secret no repositório GitHub.
