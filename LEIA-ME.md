@@ -4,7 +4,7 @@ App responsivo de rotina e finanças, sem tela de login do app.
 
 ## Usar
 
-Abra `dist/index.html` no navegador ou use a prévia local. Os dados ficam no armazenamento local do navegador. Celular e desktop ainda não sincronizam. Em Configurações, exporte uma cópia JSON para backup ou transferência. Os dados iniciais são vazios; o botão “Adicionar exemplos” inclui registros demonstrativos.
+Abra `dist/index.html` no navegador ou use a prévia local. Os dados ficam no armazenamento local do navegador até a ativação da sincronização nas Configurações. Consulte INTEGRACAO-SUPABASE.md para concluir banco e SMTP. Em Configurações, exporte uma cópia JSON para backup ou transferência. Os dados iniciais são vazios; o botão “Adicionar exemplos” inclui registros demonstrativos.
 
 ## Recursos
 
@@ -23,7 +23,7 @@ O reconhecimento automático identifica a grade, corrige a perspectiva e lê cad
 
 ## Supabase
 
-A lógica de dados está centralizada em `db` e `save()` no arquivo `dist/app.js`. Os dados do app continuam locais; a sincronização futura deve incluir tarefas, categorias, bancos, transações, projetos, configurações e lotes de importação. O projeto Supabase informado foi configurado com uma tabela exclusiva de verificação e um ping diário no GitHub Actions às 09:17, horário de São Paulo. Consulte `SUPABASE-PING.md` para configuração e limites.
+O cliente Supabase sincroniza tarefas, categorias, finanças, planos, escalas e configurações, com cópia local e revisão de conflitos. A ativação está aguardando a aplicação do SQL e a configuração do SMTP. Consulte `INTEGRACAO-SUPABASE.md`. O ping diário do GitHub Actions continua às 09:17, horário de São Paulo; consulte `SUPABASE-PING.md`.
 
 O app está publicado em https://isabela-meu-espaco.vercel.app/ com os arquivos do repositório GitHub Isabela.
 

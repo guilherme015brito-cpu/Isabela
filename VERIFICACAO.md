@@ -83,3 +83,11 @@ A tabela `public.app_healthcheck` foi criada no projeto Supabase informado. A co
 Workflow ativo e primeira execução manual concluída com sucesso: [run 37376986565](https://github.com/guilherme015brito-cpu/Isabela/actions/runs/37376986565). As três consultas foram confirmadas no runner do GitHub. Programado diariamente às 09:17 no fuso America/Sao_Paulo. A sincronização dos dados do app ainda não faz parte desta configuração.
 
 Layout publicado conferido no Edge: painel aberto em viewports de 390×844 e 320×844, sem rolagem horizontal (375=375 e 305=305 px de largura efetiva). Campos com fonte 16px e altura 46px. Categoria, status e datas combinados mantiveram o painel aberto e retornaram a tarefa de teste correta; limpar voltou ao padrão. Desktop sem rolagem horizontal (1358=1358 px), com busca e seletores na primeira linha e datas/importação na segunda. Não houve teste em iPhone físico. Captura: `filtros-tarefas-mobile.jpg`.
+
+
+## Preparação da sincronização
+
+- 12 testes do cliente: migração com backup, segundo aparelho, concorrência, conflitos, indisponibilidade e alterações durante envio. SDK de autenticação simulado; nenhum e-mail real enviado.
+- 10 testes no PostgreSQL local (PGlite): SQL compila, coleções e configurações preservadas, revisão impede sobrescrita, referências inválidas rejeitadas, exclusões por dono, funções protegidas e RLS nas nove tabelas.
+- Verificações existentes: 22 fluxos gerais, 13 do calendário mobile, 8 dos filtros e instalação iPhone passaram.
+- Ainda não aplicado no Supabase publicado. SMTP, modelos OTP e ativação real no iPhone dependem de configuração. Push permanece pendente.
