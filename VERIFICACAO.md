@@ -91,3 +91,6 @@ Layout publicado conferido no Edge: painel aberto em viewports de 390×844 e 320
 - 10 testes no PostgreSQL local (PGlite): SQL compila, coleções e configurações preservadas, revisão impede sobrescrita, referências inválidas rejeitadas, exclusões por dono, funções protegidas e RLS nas nove tabelas.
 - Verificações existentes: 22 fluxos gerais, 13 do calendário mobile, 8 dos filtros e instalação iPhone passaram.
 - Ainda não aplicado no Supabase publicado. SMTP, modelos OTP e ativação real no iPhone dependem de configuração. Push permanece pendente.
+
+- Publicação confirmada pelo status de sucesso do Vercel no commit 366fc1fb613621d45e76a48cb151afc385a61c40.
+- Tela publicada em 390 × 844: sem rolagem horizontal, painel dentro da largura e solicitação de código desabilitada enquanto SMTP está pendente. Evidência: sincronizacao-mobile.png.
