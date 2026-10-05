@@ -1,0 +1,31 @@
+{
+  "id": "./",
+  "name": "Isabela · Meu espaço",
+  "short_name": "Isabela",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffafa",
+  "theme_color": "#ed9eb7",
+  "icons": [
+    {
+      "src": "icons/isabela-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/isabela-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/isabela-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
