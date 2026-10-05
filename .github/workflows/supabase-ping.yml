@@ -1,0 +1,53 @@
+name: Supabase - ping diario
+
+on:
+  schedule:
+    # 09:17 no horário de São Paulo; evita o início da hora.
+    - cron: '17 9 * * *'
+      timezone: America/Sao_Paulo
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: supabase-ping
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Consultar o banco e validar a resposta
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${SUPABASE_URL:?Configure a variável SUPABASE_URL do repositório}"
+          : "${SUPABASE_PUBLISHABLE_KEY:?Configure o secret SUPABASE_PUBLISHABLE_KEY do repositório}"
+          if [[ ! "$SUPABASE_URL" =~ ^https://[a-z0-9]+\.supabase\.co/?$ ]]; then
+            echo '::error::SUPABASE_URL deve ser a URL HTTPS do projeto Supabase.'
+            exit 1
+          fi
+          response_file="$(mktemp)"
+          trap 'rm -f "$response_file"' EXIT
+          # Leituras reais do Postgres; sem escrita e sem dados pessoais.
+          for attempt in 1 2 3; do
+            curl --silent --show-error --fail-with-body \
+              --connect-timeout 10 --max-time 30 \
+              --retry 2 --retry-delay 5 --retry-max-time 90 \
+              --header "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+              --header 'Accept: application/json' \
+              --header 'Cache-Control: no-cache' \
+              --output "$response_file" \
+              "${SUPABASE_URL%/}/rest/v1/app_healthcheck?select=id&id=eq.1&limit=1"
+            if ! jq -e 'type == "array" and length == 1 and .[0].id == 1' "$response_file" >/dev/null; then
+              echo '::error::O banco não devolveu a linha de verificação. Confira supabase/healthcheck.sql e a configuração da Data API.'
+              exit 1
+            fi
+            echo "Consulta $attempt confirmada."
+          done
+          echo '### Supabase disponível' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Três consultas ao banco concluídas com sucesso. Nenhum registro foi alterado.' >> "$GITHUB_STEP_SUMMARY"
