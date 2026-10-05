@@ -69,3 +69,5 @@ Importação: reproduzido aviso de escala duplicada atrás do dialog. Avisos ago
 Importação corrigida: avisos dentro do dialog, confirmação acessível para escala duplicada e botão Ver calendário validado no Edge. Os 21 grupos de testes passaram, incluindo a posição do aviso e fechamento do modal.
 
 Preferências de notificações: 22 grupos passaram. Verificados salvamento local, recarregamento, categorias/dias, horários duplicados, faixa de repetição inválida e desativação preservando as escolhas. Formulário e confirmação de salvamento também verificados no Edge.
+
+Calendário mobile: 13 verificações específicas passaram, além dos 22 grupos gerais e teste de instalação. Corrigidas as trocas Mês→Semana/15dias para preservar o dia escolhido. Espaçamento atualizado conforme a imagem do iPhone: semanas com altura fixa, divisórias discretas, até duas etiquetas e contador de excedentes. Manifest, ícone Apple e HTML publicados verificados por HTTP200. A instalação real no iPhone depende do aparelho.
