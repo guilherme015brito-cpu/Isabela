@@ -1,6 +1,6 @@
 # Calendário mobile
 
-O celular usa um calendário compacto com indicadores coloridos por dia e uma agenda legível abaixo. Toque em um dia para ver todas as tarefas. Toque no nome da tarefa para editar/ver detalhes, ou no botão de conclusão para retirá-la do calendário. O botão Nova tarefa usa a data selecionada.
+O celular usa semanas com altura fixa, separadores discretos e até duas etiquetas por dia, seguindo o espaçamento da imagem do calendário do iPhone enviada. Toque em um dia para abrir a lista completa de tarefas. Uma agenda também fica abaixo do mês. Toque no nome da tarefa para editar/ver detalhes, ou no botão de conclusão para retirá-la do calendário. O botão Nova tarefa usa a data selecionada.
 
 Mês, semana, 15 dias, dia e ano continuam disponíveis. Deslize horizontalmente no calendário para mudar o período. Toque no título do mês para escolher mês/ano ou ir direto a uma data. Filtros e importação da escala estão no controle Filtros e escala. Os nomes das abas ficam visíveis na navegação inferior, inclusive após selecionar uma aba.
 
