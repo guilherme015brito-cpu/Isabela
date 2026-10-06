@@ -104,3 +104,8 @@ SQL aplicado com sucesso após autorização do usuário. Consulta no Supabase c
 ## Ativação por senha — 06/10/2026
 
 OTP substituído por e-mail e senha em Configurações. Sem SMTP ou tela de cadastro pública. Quinze verificações do cliente passaram, incluindo senha incorreta, usuário não confirmado, limpeza do campo e entrada por SDK preservando a sincronização. Autenticação simulada: a criação do usuário e a entrada com senha real ficam a cargo do proprietário, diretamente no Supabase e no app.
+
+
+## Prioridade local na primeira sincronização
+
+18 testes do cliente passaram. A primeira combinação mantém a versão local em todos os tipos de registro e nas preferências, adiciona registros exclusivos da nuvem sem duplicar identificadores, guarda backup antes da alteração e mantém a prioridade durante a recuperação de falhas de rede. Após o primeiro envio confirmado, a revisão de conflitos entre aparelhos volta ao funcionamento normal.

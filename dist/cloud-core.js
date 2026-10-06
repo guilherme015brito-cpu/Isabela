@@ -35,7 +35,12 @@
     }
     return {data:result,conflicts};
   }
+  function preferLocal(local,remote){
+    const result={settings:{...clone(remote.settings),...clone(local.settings)}};
+    for(const key of collections){const records=new Map(remote[key].map(item=>[item.id,clone(item)]));for(const item of local[key])records.set(item.id,clone(item));result[key]=[...records.values()]}
+    return result;
+  }
   // Aplicar um snapshot não pode apagar alterações feitas enquanto a rede respondia.
   function rebase(sent,current,acknowledged){return merge(sent,current,acknowledged)}
-  return {collections,clone,stable,equal,canonical,assertDocument,merge,rebase};
+  return {collections,clone,stable,equal,canonical,assertDocument,merge,rebase,preferLocal};
 });

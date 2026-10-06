@@ -37,7 +37,7 @@ function cloudSettings(){
     content=`<p class="muted">Ative este aparelho com o e-mail cadastrado e a senha exclusiva do app. Sua sessão ficará salva para os próximos acessos.</p><form id="cloudemailform" class="form"><label>E-mail de ativação<input id="cloudemail" type="email" autocomplete="username" placeholder="Seu e-mail cadastrado" required value="${esc(s.email)}" ${s.authBusy?'disabled':''}></label><label>Senha do app<input id="cloudpassword" type="password" autocomplete="current-password" placeholder="Senha criada no Supabase" required ${s.authBusy?'disabled':''}></label><small>Use a senha criada para o app Isabela. Se esquecer, redefina pelo painel do Supabase.</small><button class="primary" type="submit" ${s.authBusy||!s.client?'disabled':''}>${s.authBusy?'Ativando…':'Ativar este aparelho'}</button></form>`;
   }else{
     content=`<p class="cloud-account">${icon('spark')}<span>${esc(s.session.user.email||'Aparelho vinculado')}</span></p><p class="muted">As alterações são sincronizadas ao salvar e enquanto o app está aberto. Sem internet, continuam guardadas neste aparelho.</p>${updated?`<small>Última sincronização: ${esc(updated)}</small>`:''}<div class="row wrap cloud-actions"><button class="primary" id="cloudsync" ${s.busy?'disabled':''}>Sincronizar agora</button><button id="cloudsignout">Desvincular este aparelho</button></div>`;
-    if(s.migration)content+=`<div class="cloud-review"><h3>Conectar seus dados</h3><p>Neste aparelho: ${cloudCounts(cloudCurrent())}.</p><p>Na nuvem: ${s.migration.data?cloudCounts(s.migration.data):'Nenhum dado salvo ainda'}.</p><small>Antes de continuar, o app guarda uma cópia dos dados atuais neste aparelho.</small><div class="cloud-actions row wrap"><button class="primary" id="cloudmigrate">${s.migration.data?'Combinar com a nuvem':'Enviar dados deste aparelho'}</button>${s.migration.data?'<button id="cloudusecloud">Usar dados da nuvem</button>':''}</div></div>`;
+    if(s.migration)content+=`<div class="cloud-review"><h3>Conectar seus dados</h3><p>Neste aparelho: ${cloudCounts(cloudCurrent())}.</p><p>Na nuvem: ${s.migration.data?cloudCounts(s.migration.data):'Nenhum dado salvo ainda'}.</p><small>Os dados deste aparelho têm prioridade. Registros com o mesmo identificador manterão a versão local; registros exclusivos da nuvem serão adicionados. Uma cópia local será guardada antes do envio.</small><div class="cloud-actions row wrap"><button class="primary" id="cloudmigrate">${s.migration.data?'Sincronizar mantendo meus dados':'Enviar dados deste aparelho'}</button></div></div>`;
     if(s.conflict)content+=`<div class="cloud-review"><h3>Revisar alterações de dois aparelhos</h3><p>Escolha qual versão manter nos registros alterados nos dois aparelhos. As demais alterações serão combinadas.</p><form id="cloudconflictform" class="form">${s.conflict.result.conflicts.map((c,i)=>`<label>${esc(cloudCollectionNames[c.key.split(':')[0]]||'Configurações')} · ${esc(c.label)}<select name="conflict${i}" required><option value="">Escolher uma versão…</option><option value="local">${c.local===undefined?'Exclusão neste aparelho':'Versão deste aparelho'}</option><option value="remote">${c.remote===undefined?'Exclusão na nuvem':'Versão da nuvem'}</option></select><small>Neste aparelho: ${esc(cloudDescribe(c.local))}<br>Na nuvem: ${esc(cloudDescribe(c.remote))}</small></label>`).join('')}<button class="primary">Confirmar escolhas e sincronizar</button></form></div>`;
   }
   return `<section class="card cloud-card" id="cloudsettings"><div class="row between wrap"><h2>Sincronização</h2><span class="badge" id="cloudstatus" role="status">${esc(cloudStatusText())}</span></div>${content}<p id="cloudfeedback" role="status" aria-live="polite">${esc(s.message)}</p>${localStorage.getItem(cloudBackupKey)?'<button id="cloudbackup" class="ghost">Baixar cópia anterior à ativação</button>':''}</section>`;
@@ -75,14 +75,17 @@ async function cloudDiscover(){
     }else{cloudState.migration=remote;cloudState.message='Escolha como conectar os dados deste aparelho. Nada foi enviado ainda.'}
   }catch(error){cloudState.status='error';cloudState.message=cloudFriendly(error)}finally{cloudState.busy=false;cloudRefresh()}
 }
-async function cloudMigrate(useRemote=false){
+async function cloudMigrate(){
   if(!cloudState.migration||!cloudState.session||!cloudBackup())return;
-  const remote=cloudState.migration,local=cloudCurrent(),base=remote.data?cloudDefaultBase():local;
-  cloudState.migration=null;cloudCache={owner:cloudState.session.user.id,revision:remote.revision,base:remote.data||base,ready:true};
-  if(useRemote){cloudApply(remote.data);cloudCache.lastSynced=new Date().toISOString();cloudCacheSave()}
-  else if(remote.data){const result=cloudCore.merge(base,local,remote.data);if(result.conflicts.length){cloudConflict(base,local,remote,result);cloudCacheSave();return}cloudApply(result.data);cloudCacheSave();await cloudSynchronize(true)}
-  else{cloudCache.forceUpload=true;cloudCacheSave();await cloudSynchronize(true)}
-  if(!cloudState.conflict&&!cloudState.paused&&cloudState.status!=='error')cloudState.message='Aparelho vinculado. Seus dados locais anteriores continuam disponíveis na cópia de segurança.';cloudRefresh();
+  const remote=cloudState.migration,local=cloudCurrent();
+  try{
+    const combined=remote.data?cloudCore.preferLocal(local,remote.data):local;
+    cloudCore.assertDocument(combined);
+    cloudCache={owner:cloudState.session.user.id,revision:remote.revision,base:remote.data||local,ready:true,forceUpload:true,localPriorityPending:true};
+    cloudState.migration=null;cloudApply(combined);cloudCacheSave();await cloudSynchronize(true);
+    if(!cloudState.conflict&&!cloudState.paused&&cloudState.status!=='error')cloudState.message='Seus dados locais foram mantidos. A cópia anterior continua disponível para download.';
+  }catch(error){cloudState.message=error.message}
+  cloudRefresh();
 }
 async function cloudSynchronize(force=false){
   if(!cloudState.session||!cloudCache.ready||cloudCache.owner!==cloudState.session.user.id){if(force)await cloudDiscover();return}
@@ -96,7 +99,7 @@ async function cloudSynchronize(force=false){
       if(cloudState.session?.user.id!==owner)return;
       if(cloudEditing()){cloudSchedule(2000);return}
       const local=cloudCurrent(),base=cloudCache.base||local;
-      const result=remote.data?cloudCore.merge(base,local,remote.data):{data:local,conflicts:[]};
+      const result=remote.data?(cloudCache.localPriorityPending?{data:cloudCore.preferLocal(local,remote.data),conflicts:[]}:cloudCore.merge(base,local,remote.data)):{data:local,conflicts:[]};
       if(result.conflicts.length){cloudConflict(base,local,remote,result);return}
       cloudCore.assertDocument(result.data);
       if(remote.data&&cloudCore.equal(result.data,remote.data)&&!cloudCache.forceUpload){
@@ -107,7 +110,7 @@ async function cloudSynchronize(force=false){
       if(cloudState.session?.user.id!==owner)return;
       // Retain commits made locally while the upload was in flight.
       const duringRequest=cloudCore.merge(local,cloudCurrent(),sent);
-      cloudCache={...cloudCache,revision:ack.revision,base:ack.data,lastSynced:new Date().toISOString(),forceUpload:false};
+      cloudCache={...cloudCache,revision:ack.revision,base:ack.data,lastSynced:new Date().toISOString(),forceUpload:false,localPriorityPending:false};
       if(duringRequest.conflicts.length){cloudConflict(local,cloudCurrent(),{...ack,data:sent},duringRequest);cloudCacheSave();return}
       cloudApply(duringRequest.data);cloudCacheSave();break;
     }
@@ -131,7 +134,7 @@ function bindCloudSettings(){
   on('#cloudemail','oninput',e=>cloudState.email=e.target.value);
   on('#cloudemailform','onsubmit',cloudSignIn);
   on('#cloudsync','onclick',()=>{cloudState.paused=false;void cloudSynchronize(true)});
-  on('#cloudmigrate','onclick',()=>void cloudMigrate());on('#cloudusecloud','onclick',()=>void cloudMigrate(true));
+  on('#cloudmigrate','onclick',()=>void cloudMigrate());
   on('#cloudsignout','onclick',()=>{modal(`<h2>Desvincular este aparelho?</h2><p>Os dados continuam neste aparelho e na nuvem. ${cloudDirty()?'Há alterações locais ainda não enviadas. Elas serão retomadas quando você ativar este aparelho novamente.':''}</p><div class="modal-actions"><button id="cloudcancelout">Cancelar</button><button id="cloudconfirmout">Desvincular</button></div>`);$('#cloudcancelout').onclick=close;$('#cloudconfirmout').onclick=async()=>{const {error}=await cloudState.client.auth.signOut({scope:'local'});if(error){toast(cloudFriendly(error));return}close();await cloudSetSession(null);render()}});
   on('#cloudbackup','onclick',()=>{try{const backup=JSON.parse(localStorage.getItem(cloudBackupKey));const url=URL.createObjectURL(new Blob([JSON.stringify(backup.data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='isabela-antes-da-sincronizacao.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch{cloudMessage('Não foi possível abrir a cópia anterior.')}});
   on('#cloudconflictform','onsubmit',async e=>{e.preventDefault();const conflict=cloudState.conflict;if(!conflict)return;const f=new FormData(e.target),choices={};conflict.result.conflicts.forEach((c,i)=>choices[c.key]=f.get('conflict'+i));const result=cloudCore.merge(conflict.base,conflict.local,conflict.remote.data,choices);if(result.conflicts.length)return;

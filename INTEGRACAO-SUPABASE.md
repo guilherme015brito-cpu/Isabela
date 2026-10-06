@@ -18,14 +18,14 @@ Essa confirmação se aplica ao usuário criado manualmente. Não é necessário
 2. Vá a Configurações → Sincronização.
 3. Informe o e-mail autorizado e a senha criada no passo anterior.
 4. Toque em Ativar este aparelho.
-5. Confira os totais locais e os da nuvem. Se a nuvem estiver vazia, toque em Enviar dados deste aparelho. Se já houver dados, revise a opção de combinar.
+5. Confira os totais locais e os da nuvem. Se a nuvem estiver vazia, toque em Enviar dados deste aparelho. Se já houver dados, toque em Sincronizar mantendo meus dados: a versão local de cada registro prevalece e os registros exclusivos da nuvem são adicionados.
 6. Aguarde a indicação Sincronizado.
 
 Uma cópia anterior à ativação fica disponível para download. Safari e o app instalado podem ter armazenamentos diferentes: use o app que contém seus dados. Se precisar transferir dados do Safari, exporte uma cópia antes e restaure no app instalado antes da primeira sincronização.
 
 ## 3. Ativar no computador
 
-Abra o app, vá a Configurações → Sincronização e use o mesmo e-mail e senha. Em um navegador sem dados locais, os dados da nuvem são carregados. Se já existir uma rotina local, o app pede revisão da combinação.
+Abra o app, vá a Configurações → Sincronização e use o mesmo e-mail e senha. Em um navegador sem dados locais, os dados da nuvem são carregados. Se já existir uma rotina local, o app pede confirmação e mantém os registros locais em caso de identificadores iguais.
 
 A sessão normalmente permanece ativa. Será preciso entrar novamente após desvincular, limpar os dados do navegador ou se a sessão for revogada. Sem SMTP, uma senha esquecida deve ser redefinida pelo proprietário no painel do Supabase.
 
@@ -35,7 +35,7 @@ Tarefas, categorias, bancos, movimentações, planos, escalas, aparência e pref
 
 As nove tabelas pessoais têm RLS habilitado e acesso direto bloqueado. As funções autenticadas verificam o dono e o e-mail autorizado. `supabase/integration.sql` pode ser usado para reinstalação. O e-mail autorizado é provisionado separadamente em `private.isabela_allowed_emails` e não é incluído no arquivo público. A chave publishable não concede acesso aos dados privados; nenhuma chave administrativa fica no cliente.
 
-O app verifica a nuvem ao abrir, voltar ao foco e enquanto está visível. Sem internet, grava localmente e tenta novamente. Alterações em registros diferentes são combinadas; no mesmo registro, Configurações mostra uma revisão. A revisão do banco impede sobrescrever uma versão mais recente.
+O app verifica a nuvem ao abrir, voltar ao foco e enquanto está visível. Sem internet, grava localmente e tenta novamente. Na primeira sincronização, os registros e as preferências locais têm prioridade, com backup anterior ao envio. Essa prioridade continua se houver falha de rede até a confirmação do primeiro envio. Nas sincronizações seguintes, alterações em registros diferentes são combinadas; no mesmo registro, Configurações mostra uma revisão. A revisão do banco impede sobrescrever uma versão mais recente.
 
 Sincronização acontece com o app aberto. Notificações push com o app fechado continuam dependendo de inscrições Web Push e agendamento no servidor; autenticação por senha não ativa notificações. Exporte cópias regularmente.
 
