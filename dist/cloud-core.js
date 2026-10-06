@@ -12,7 +12,19 @@
     for(const b of doc.banks)if(!Number.isFinite(b.initial))throw Error('Um banco tem saldo inválido.');
     for(const p of doc.projects)if(!Number.isFinite(p.target)||p.target<=0)throw Error('Um plano tem meta inválida.');
     for(const t of doc.transactions)if(!Number.isFinite(parseDate(t.date))||!Number.isFinite(t.amount)||t.amount<=0||!['in','out'].includes(t.type)||!doc.banks.some(b=>b.id===t.bank)||(t.project&&!doc.projects.some(p=>p.id===t.project)))throw Error('Uma movimentação ficou sem banco ou plano. Revise os registros antes de sincronizar.');
+    assertNutrition(doc.settings.nutrition);
     return doc;
+  }
+  function assertNutrition(data){
+    if(data===undefined)return;
+    const invalid=()=>{throw Error('Os dados de nutrição são inválidos. Revise a cópia antes de sincronizar.')};
+    if(!data||typeof data!=='object'||!Array.isArray(data.plans)||!Array.isArray(data.measurements))invalid();
+    const ids=items=>{const seen=new Set();for(const item of items){if(!item||typeof item.id!=='string'||!item.id||seen.has(item.id))invalid();seen.add(item.id)}};
+    const number=(n,min,max)=>Number.isFinite(n)&&n>=min&&n<=max;
+    ids(data.plans);ids(data.measurements);
+    for(const p of data.plans){if(typeof p.name!=='string'||!p.name.trim()||typeof p.emoji!=='string'||!number(p.waterMl,0,20000)||!Array.isArray(p.meals))invalid();ids(p.meals);for(const m of p.meals){if(typeof m.name!=='string'||!m.name.trim()||typeof m.emoji!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(m.time)||!Array.isArray(m.foods)||!m.foods.length||m.foods.some(f=>typeof f!=='string'||!f.trim())||['kcal','protein','carbs','fat'].some(k=>!number(m[k],0,100000)))invalid()}}
+    for(const r of data.measurements)if(!Number.isFinite(parseDate(r.date))||typeof r.createdAt!=='string'||!number(r.weight,.1,1000)||!number(r.height,1,300)||!number(r.bodyFat,0,100))invalid();
+    return data;
   }
   function parseDate(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return NaN;const d=new Date(s+'T12:00:00Z');return Number.isFinite(+d)&&d.toISOString().slice(0,10)===s?+d:NaN}
   function merge(base,local,remote,choices={}){
@@ -31,7 +43,7 @@
       for(const id of ids){const record=choose(collection+':'+id,b.get(id),l.get(id),r.get(id),(l.get(id)||r.get(id)||b.get(id))?.name||'Registro da escala');if(record!==undefined)result[collection].push(record)}
     }
     for(const key of new Set([...Object.keys(base?.settings||{}),...Object.keys(local.settings),...Object.keys(remote.settings)])){
-      const value=choose('settings:'+key,base?.settings?.[key],local.settings[key],remote.settings[key],key==='notifications'?'Preferências de notificações':'Configuração: '+key);if(value!==undefined)result.settings[key]=value;
+      const value=choose('settings:'+key,base?.settings?.[key],local.settings[key],remote.settings[key],key==='notifications'?'Preferências de notificações':key==='nutrition'?'Planejamentos alimentares e antropometria':'Configuração: '+key);if(value!==undefined)result.settings[key]=value;
     }
     return {data:result,conflicts};
   }
@@ -42,5 +54,5 @@
   }
   // Aplicar um snapshot não pode apagar alterações feitas enquanto a rede respondia.
   function rebase(sent,current,acknowledged){return merge(sent,current,acknowledged)}
-  return {collections,clone,stable,equal,canonical,assertDocument,merge,rebase,preferLocal};
+  return {collections,clone,stable,equal,canonical,assertDocument,merge,rebase,preferLocal,assertNutrition};
 });

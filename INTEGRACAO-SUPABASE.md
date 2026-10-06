@@ -42,3 +42,8 @@ Sincronização acontece com o app aberto. Notificações push com o app fechado
 ## SDK
 
 `dist/vendor/supabase.js`: @supabase/supabase-js 2.117.2, empacotado com esbuild 0.28.2 como IIFE (`IsabelaSupabase`), browser, ES2020. Licenças em `dist/vendor/THIRD-PARTY.txt`.
+
+
+## Nutrição
+
+Planejamentos, refeições e avaliações antropométricas integram o campo privado settings.nutrition e os backups. O PIN 0000 libera a edição dos formulários no app; não substitui a autenticação de cada aparelho no Supabase. Nenhuma migração SQL adicional é necessária.

@@ -109,3 +109,8 @@ OTP substituído por e-mail e senha em Configurações. Sem SMTP ou tela de cada
 ## Prioridade local na primeira sincronização
 
 18 testes do cliente passaram. A primeira combinação mantém a versão local em todos os tipos de registro e nas preferências, adiciona registros exclusivos da nuvem sem duplicar identificadores, guarda backup antes da alteração e mantém a prioridade durante a recuperação de falhas de rede. Após o primeiro envio confirmado, a revisão de conflitos entre aparelhos volta ao funcionamento normal.
+
+
+## Nutrição
+
+15 verificações da nova aba passaram: PIN correto/incorreto, planos, água e vírgula decimal, refeições e horários, alimentos e quantidades, macros manuais e totais, múltiplos planos, antropometria e histórico, edição, validação, expiração e bloqueio ao sair, exclusões com confirmação, persistência e cópias. O teste PostgreSQL preservou planejamentos, refeições e avaliações no snapshot de settings. Regressões existentes de tarefas, finanças, calendário e sincronização passaram.

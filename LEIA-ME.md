@@ -37,3 +37,8 @@ O app está publicado em https://isabela-meu-espaco.vercel.app/ com os arquivos 
 Ícones selecionáveis, paleta com anel cromático, lixeira com confirmação nos detalhes, categorias financeiras e filtros do caixa. Consulte VERIFICACAO.md para os testes realizados e suas limitações.
 
 Notificações: em Configurações você pode salvar frequência, dias, até três horários, intervalo, antecedência, descanso, categorias, resumo, atrasadas e fuso horário. Essas preferências ainda não enviam notificações; aguardam integração com um servidor.
+
+
+## Nutrição
+
+A aba 🥑 Nutrição reúne vários planejamentos, refeições, macros manuais, meta de água e histórico de antropometria. Consulta livre e edição pelo PIN 0000. Consulte NUTRICAO.md. Os dados estão incluídos na sincronização existente e nas cópias JSON.
