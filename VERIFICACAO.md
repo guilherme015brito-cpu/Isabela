@@ -94,3 +94,13 @@ Layout publicado conferido no Edge: painel aberto em viewports de 390×844 e 320
 
 - Publicação confirmada pelo status de sucesso do Vercel no commit 366fc1fb613621d45e76a48cb151afc385a61c40.
 - Tela publicada em 390 × 844: sem rolagem horizontal, painel dentro da largura e solicitação de código desabilitada enquanto SMTP está pendente. Evidência: sincronizacao-mobile.png.
+
+
+## Banco publicado — 06/10/2026
+
+SQL aplicado com sucesso após autorização do usuário. Consulta no Supabase confirmou 9 tabelas pessoais, RLS em todas, acesso direto bloqueado, e-mail autorizado, chamadas anônimas bloqueadas e sincronização permitida apenas pela função autenticada. Zero aparelhos sincronizados: dados locais ainda não enviados. SMTP e ativação real continuam pendentes.
+
+
+## Ativação por senha — 06/10/2026
+
+OTP substituído por e-mail e senha em Configurações. Sem SMTP ou tela de cadastro pública. Quinze verificações do cliente passaram, incluindo senha incorreta, usuário não confirmado, limpeza do campo e entrada por SDK preservando a sincronização. Autenticação simulada: a criação do usuário e a entrada com senha real ficam a cargo do proprietário, diretamente no Supabase e no app.

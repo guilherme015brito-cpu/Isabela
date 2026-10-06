@@ -2,7 +2,7 @@
 const cloudCore=window.IsabelaSyncCore;
 const cloudCacheKey='isabela-cloud-v1',cloudBackupKey='isabela-before-cloud-v1';
 const cloudCollectionNames={tasks:'Tarefas',categories:'Categorias',financeCategories:'Categorias do caixa',banks:'Bancos',transactions:'Movimentações',projects:'PLAN',importBatches:'Escalas'};
-const cloudState={client:null,session:null,busy:false,authBusy:false,email:'',code:'',requested:false,message:'',status:'local',migration:null,conflict:null,timer:null,retry:0,paused:false};
+const cloudState={client:null,session:null,busy:false,authBusy:false,email:'',message:'',status:'local',migration:null,conflict:null,timer:null,retry:0,paused:false};
 let cloudCache;try{cloudCache=JSON.parse(localStorage.getItem(cloudCacheKey))||{}}catch{cloudCache={}}
 function cloudDefaultBase(){return cloudCore.canonical({...structuredClone(seed),financeCategories:[{id:'food',name:'Alimentação',emoji:'🍽️',color:'#efa58c'},{id:'transport',name:'Transporte',emoji:'🚌',color:'#97c5e3'},{id:'bills',name:'Contas',emoji:'💡',color:'#f2c75c'},{id:'shopping',name:'Compras',emoji:'🛒',color:'#e9a8be'},{id:'salary',name:'Renda',emoji:'💰',color:'#a8c9ba'}]})}
 function cloudCurrent(){return cloudCore.canonical(db)}
@@ -30,11 +30,11 @@ function cloudStatusText(){
   return 'Sincronizado';
 }
 function cloudSettings(){
-  const s=cloudState,connected=!!s.session,delivery=window.IsabelaCloudConfig?.emailDeliveryReady===true;
+  const s=cloudState,connected=!!s.session;
   const updated=cloudCache.lastSynced?new Date(cloudCache.lastSynced).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'';
   let content;
   if(!connected){
-    content=`<p class="muted">Vincule este aparelho para guardar sua rotina na nuvem e acessar os mesmos dados no celular e no computador.</p>${!delivery?'<div class="notice cloud-wait">A ativação por e-mail está em preparação. Você pode continuar usando o app e fazendo cópias dos seus dados.</div>':''}<form id="cloudemailform" class="form"><label>E-mail de ativação<input id="cloudemail" type="email" autocomplete="email" placeholder="Seu e-mail cadastrado" required value="${esc(s.email)}" ${s.authBusy?'disabled':''}></label><button class="primary" type="submit" ${s.authBusy||!s.client||!delivery?'disabled':''}>${s.authBusy?'Aguarde…':s.requested?'Enviar novo código':'Receber código de ativação'}</button></form>${s.requested?`<form id="cloudcodeform" class="form"><label>Código recebido por e-mail<input id="cloudcode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required value="${esc(s.code)}" ${s.authBusy?'disabled':''}></label><button class="primary" ${s.authBusy?'disabled':''}>Ativar este aparelho</button><small>Confira também a pasta de spam. Abra o app pelo ícone da Tela de Início antes de inserir o código.</small></form>`:''}`;
+    content=`<p class="muted">Ative este aparelho com o e-mail cadastrado e a senha exclusiva do app. Sua sessão ficará salva para os próximos acessos.</p><form id="cloudemailform" class="form"><label>E-mail de ativação<input id="cloudemail" type="email" autocomplete="username" placeholder="Seu e-mail cadastrado" required value="${esc(s.email)}" ${s.authBusy?'disabled':''}></label><label>Senha do app<input id="cloudpassword" type="password" autocomplete="current-password" placeholder="Senha criada no Supabase" required ${s.authBusy?'disabled':''}></label><small>Use a senha criada para o app Isabela. Se esquecer, redefina pelo painel do Supabase.</small><button class="primary" type="submit" ${s.authBusy||!s.client?'disabled':''}>${s.authBusy?'Ativando…':'Ativar este aparelho'}</button></form>`;
   }else{
     content=`<p class="cloud-account">${icon('spark')}<span>${esc(s.session.user.email||'Aparelho vinculado')}</span></p><p class="muted">As alterações são sincronizadas ao salvar e enquanto o app está aberto. Sem internet, continuam guardadas neste aparelho.</p>${updated?`<small>Última sincronização: ${esc(updated)}</small>`:''}<div class="row wrap cloud-actions"><button class="primary" id="cloudsync" ${s.busy?'disabled':''}>Sincronizar agora</button><button id="cloudsignout">Desvincular este aparelho</button></div>`;
     if(s.migration)content+=`<div class="cloud-review"><h3>Conectar seus dados</h3><p>Neste aparelho: ${cloudCounts(cloudCurrent())}.</p><p>Na nuvem: ${s.migration.data?cloudCounts(s.migration.data):'Nenhum dado salvo ainda'}.</p><small>Antes de continuar, o app guarda uma cópia dos dados atuais neste aparelho.</small><div class="cloud-actions row wrap"><button class="primary" id="cloudmigrate">${s.migration.data?'Combinar com a nuvem':'Enviar dados deste aparelho'}</button>${s.migration.data?'<button id="cloudusecloud">Usar dados da nuvem</button>':''}</div></div>`;
@@ -50,6 +50,8 @@ function cloudRefresh(){const panel=$('#cloudsettings');if(!panel)return;const a
 function cloudMessage(message){cloudState.message=message;cloudRefresh()}
 function cloudFriendly(error){const text=String(error?.message||'');
   if(/email.*not.*authorized|email_address_not_authorized|smtp/i.test(text+' '+error?.code))return 'O envio de e-mails ainda precisa ser configurado. Seus dados continuam neste aparelho.';
+  if(/invalid login credentials|invalid_credentials/i.test(text+' '+error?.code))return 'E-mail ou senha incorretos. Use o e-mail autorizado e a senha criada para o app.';
+  if(/email not confirmed|email_not_confirmed/i.test(text+' '+error?.code))return 'O usuário ainda não está confirmado. No Supabase, crie o usuário com Auto Confirm User ativado.';
   if(error?.status===429||/rate|too many|after.*seconds/i.test(text))return 'Aguarde alguns minutos antes de solicitar outro código.';
   if(/expired|invalid.*token|otp_expired/i.test(text+' '+error?.code))return 'Código inválido ou expirado. Confira o e-mail ou solicite outro código.';
   if(error?.code==='42501')return 'Esse e-mail não está habilitado para sincronizar este app.';
@@ -114,21 +116,20 @@ async function cloudSynchronize(force=false){
   finally{cloudState.busy=false;cloudRefresh();if(cloudDirty()&&cloudState.status==='ready'&&!cloudState.conflict)cloudSchedule(1000)}
 }
 function cloudSchedule(delay=800){clearTimeout(cloudState.timer);cloudState.timer=setTimeout(()=>{if(cloudCache.ready)void cloudSynchronize();else if(cloudState.session&&!cloudState.migration)void cloudDiscover()},delay)}
-async function cloudSendCode(e){
-  e.preventDefault();if(cloudState.authBusy||!cloudState.client||window.IsabelaCloudConfig?.emailDeliveryReady!==true)return;
-  const email=$('#cloudemail').value.trim().toLowerCase();cloudState.email=email;cloudState.authBusy=true;cloudState.message='Solicitando código…';document.activeElement?.blur();cloudRefresh();
-  try{const {error}=await cloudState.client.auth.signInWithOtp({email,options:{shouldCreateUser:true}});if(error)throw error;cloudState.requested=true;cloudState.message='Código solicitado. Confira sua caixa de entrada e a pasta de spam.'}
+async function cloudSignIn(e){
+  e.preventDefault();if(cloudState.authBusy||!cloudState.client)return;
+  const email=$('#cloudemail').value.trim().toLowerCase(),password=$('#cloudpassword').value;
+  if(!email||!password)return;
+  cloudState.email=email;$('#cloudpassword').value='';document.activeElement?.blur();
+  cloudState.authBusy=true;cloudState.message='Ativando este aparelho…';cloudRefresh();
+  try{const {data,error}=await cloudState.client.auth.signInWithPassword({email,password});if(error)throw error;await cloudSetSession(data.session)}
   catch(error){cloudState.message=cloudFriendly(error)}finally{cloudState.authBusy=false;cloudRefresh()}
-}
-async function cloudVerify(e){
-  e.preventDefault();if(cloudState.authBusy)return;cloudState.code=$('#cloudcode').value.trim();cloudState.authBusy=true;cloudState.message='Verificando código…';document.activeElement?.blur();cloudRefresh();
-  try{const {data,error}=await cloudState.client.auth.verifyOtp({email:cloudState.email,token:cloudState.code,type:'email'});if(error)throw error;cloudState.code='';await cloudSetSession(data.session)}catch(error){cloudState.message=cloudFriendly(error)}finally{cloudState.authBusy=false;cloudRefresh()}
 }
 async function cloudSetSession(session){const previous=cloudState.session?.user.id;cloudState.session=session;cloudState.paused=false;if(session){cloudState.email=session.user.email||'';cloudState.message='Aparelho autenticado.';if(previous!==session.user.id)await cloudDiscover()}else{cloudState.migration=null;cloudState.conflict=null;cloudState.status='local';cloudRefresh()}}
 function bindCloudSettings(){
   const on=(id,event,fn)=>{const el=$(id);if(el)el[event]=fn};
-  on('#cloudemail','oninput',e=>cloudState.email=e.target.value);on('#cloudcode','oninput',e=>cloudState.code=e.target.value);
-  on('#cloudemailform','onsubmit',cloudSendCode);on('#cloudcodeform','onsubmit',cloudVerify);
+  on('#cloudemail','oninput',e=>cloudState.email=e.target.value);
+  on('#cloudemailform','onsubmit',cloudSignIn);
   on('#cloudsync','onclick',()=>{cloudState.paused=false;void cloudSynchronize(true)});
   on('#cloudmigrate','onclick',()=>void cloudMigrate());on('#cloudusecloud','onclick',()=>void cloudMigrate(true));
   on('#cloudsignout','onclick',()=>{modal(`<h2>Desvincular este aparelho?</h2><p>Os dados continuam neste aparelho e na nuvem. ${cloudDirty()?'Há alterações locais ainda não enviadas. Elas serão retomadas quando você ativar este aparelho novamente.':''}</p><div class="modal-actions"><button id="cloudcancelout">Cancelar</button><button id="cloudconfirmout">Desvincular</button></div>`);$('#cloudcancelout').onclick=close;$('#cloudconfirmout').onclick=async()=>{const {error}=await cloudState.client.auth.signOut({scope:'local'});if(error){toast(cloudFriendly(error));return}close();await cloudSetSession(null);render()}});

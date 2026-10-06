@@ -1,4 +1,4 @@
-const CACHE = 'isabela-shell-v6';
+const CACHE = 'isabela-shell-v7';
 const SHELL = ['./', './index.html', './style.css', './navigation.css', './controls.css', './photo.js', './ocr.js', './app.js', './controls.js', './mobile-calendar.js', './mobile-calendar.css', './install.css', './task-filters.css', './cloud.css', './cloud-config.js', './cloud-core.js', './cloud.js', './vendor/supabase.js', './reminders.js', './reminders.css', './install.js', './manifest.webmanifest', './icons/isabela-192.png', './icons/isabela-180.png', './icons/isabela-512.png', './icons/isabela-32.png', './icons/isabela-16.png', './icons/isabela-maskable-512.png'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL))));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('isabela-shell-') && key !== CACHE).map(key => caches.delete(key))))));
