@@ -22,6 +22,8 @@
     const ids=items=>{const seen=new Set();for(const item of items){if(!item||typeof item.id!=='string'||!item.id||seen.has(item.id))invalid();seen.add(item.id)}};
     const number=(n,min,max)=>Number.isFinite(n)&&n>=min&&n<=max;
     ids(data.plans);ids(data.measurements);
+    const option=o=>{if(!o||!Array.isArray(o.foods)||!o.foods.length||o.foods.some(f=>typeof f!=='string'||!f.trim())||['kcal','protein','carbs','fat'].some(k=>!number(o[k],0,100000))||(o.color!==undefined&&!['snow','rose','mint','blue','lavender','peach'].includes(o.color)))invalid()};
+    for(const p of data.plans){if(!Array.isArray(p.meals))invalid();for(const m of p.meals){option(m);if(m.variations!==undefined){if(!Array.isArray(m.variations))invalid();ids(m.variations);for(const v of m.variations)option(v)}}}
     for(const p of data.plans){if(typeof p.name!=='string'||!p.name.trim()||typeof p.emoji!=='string'||!number(p.waterMl,0,20000)||!Array.isArray(p.meals))invalid();ids(p.meals);for(const m of p.meals){if(typeof m.name!=='string'||!m.name.trim()||typeof m.emoji!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(m.time)||!Array.isArray(m.foods)||!m.foods.length||m.foods.some(f=>typeof f!=='string'||!f.trim())||['kcal','protein','carbs','fat'].some(k=>!number(m[k],0,100000)))invalid()}}
     for(const r of data.measurements)if(!Number.isFinite(parseDate(r.date))||typeof r.createdAt!=='string'||!number(r.weight,.1,1000)||!number(r.height,1,300)||!number(r.bodyFat,0,100)||(r.basalKcal!=null&&!number(r.basalKcal,1,100000)))invalid();
     return data;
