@@ -21,7 +21,7 @@ Os dados ficam em `settings.nutrition` no armazenamento do app e nas cópias JSO
 
 A regra existente de prioridade dos dados locais continua valendo na primeira sincronização. Caso dois aparelhos alterem simultaneamente Nutrição, a revisão de conflitos apresenta os planejamentos e as avaliações como um conjunto. Escolha a versão que deseja manter antes de continuar.
 
-Não foram adicionadas dietas ou medidas de exemplo ao app publicado. As imagens de demonstração usam dados fictícios de uma prévia local separada.
+Não foram adicionadas dietas ou medidas de exemplo ao app publicado. As capturas mobile mostram a versão publicada sem preenchimento de dietas ou medidas. Os testes automatizados usam dados fictícios locais.
 
 ## Referências
 
