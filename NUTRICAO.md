@@ -6,7 +6,7 @@ A aba 🥑 Nutrição foi adicionada com prioridade para o iPhone. Alimentação
 
 - Crie vários planejamentos com nome, emoji, orientações e água diária em litros.
 - Escolha qual planejamento consultar pelo seletor. Essa seleção é local e não altera o planejamento dos outros aparelhos.
-- Cadastre cada refeição com nome, horário, emoji e alimentos com suas quantidades, um por linha.
+- Cadastre cada refeição com nome, horário, emoji e alimentos em campos separados de quantidade, unidade e nome. Adicione ou remova alimentos pelo formulário. Registros antigos são preservados e separados ao editar.
 - Digite manualmente kcal, proteína, carboidratos e lipídios por refeição. Não há cálculo automático a partir dos alimentos.
 - A parte superior soma kcal e proteína das refeições daquele planejamento e mostra a água cadastrada. Carboidratos e lipídios aparecem no rodapé de cada refeição.
 - Refeições são ordenadas pelo horário. Edição e exclusão estão disponíveis no acesso de nutricionista; exclusões pedem confirmação.
@@ -31,3 +31,4 @@ O MagicPath foi consultado por "nutrition" e "health", mas não retornou compone
 - https://help.lifesum.com/en/article/quick-track-add-calories-and-macros-quickly-mgdy5l/
 
 A implementação usa a identidade rosa neve do app, campos de 16px para evitar zoom automático, alvos de toque de ao menos 44px e seis destinos na barra mobile.
+Energia basal é cadastrada manualmente em kcal/dia na avaliação. A meta de proteína é calculada como 2 g × peso em kg e aparece na última avaliação e no histórico. Registros antigos sem energia basal exibem Não cadastrada até a edição.
