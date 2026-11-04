@@ -1,13 +1,13 @@
 'use strict';
 const cloudCore=window.IsabelaSyncCore;
 const cloudCacheKey='isabela-cloud-v1',cloudBackupKey='isabela-before-cloud-v1';
-const cloudCollectionNames={tasks:'Tarefas',categories:'Categorias',financeCategories:'Categorias do caixa',banks:'Bancos',transactions:'Movimentações',projects:'PLAN',importBatches:'Escalas'};
+const cloudCollectionNames={tasks:'Tarefas',categories:'Categorias',financeCategories:'Categorias do caixa',banks:'Bancos',transactions:'Movimentações',projects:'PLAN',importBatches:'Escalas',shopping:'Compras'};
 const cloudState={client:null,session:null,busy:false,authBusy:false,email:'',message:'',status:'local',migration:null,conflict:null,timer:null,retry:0,paused:false};
 let cloudCache;try{cloudCache=JSON.parse(localStorage.getItem(cloudCacheKey))||{}}catch{cloudCache={}}
 function cloudDefaultBase(){return cloudCore.canonical({...structuredClone(seed),financeCategories:[{id:'food',name:'Alimentação',emoji:'🍽️',color:'#efa58c'},{id:'transport',name:'Transporte',emoji:'🚌',color:'#97c5e3'},{id:'bills',name:'Contas',emoji:'💡',color:'#f2c75c'},{id:'shopping',name:'Compras',emoji:'🛒',color:'#e9a8be'},{id:'salary',name:'Renda',emoji:'💰',color:'#a8c9ba'}]})}
 function cloudCurrent(){return cloudCore.canonical(db)}
 function cloudDirty(){return !cloudCache.base||!cloudCore.equal(cloudCurrent(),cloudCache.base)}
-function cloudCounts(data){return `${data.tasks.length} tarefas · ${data.banks.length} bancos · ${data.transactions.length} movimentações · ${data.projects.length} planos`}
+function cloudCounts(data){return `${data.tasks.length} tarefas · ${data.banks.length} bancos · ${data.transactions.length} movimentações · ${data.projects.length} planos · ${data.settings.shopping?.lists?.length||0} listas de compras`}
 function cloudEditing(){return !!$('#modal')?.open||document.activeElement?.matches('input,textarea,select,[contenteditable="true"]')}
 function cloudCacheSave(){try{localStorage.setItem(cloudCacheKey,JSON.stringify(cloudCache));return true}catch{cloudState.message='Não foi possível atualizar a cópia local. Exporte uma cópia dos seus dados.';return false}}
 function cloudBackup(){try{if(!localStorage.getItem(cloudBackupKey))localStorage.setItem(cloudBackupKey,JSON.stringify({created:new Date().toISOString(),data:db}));return true}catch{cloudState.message='Não foi possível guardar a cópia anterior. Exporte seus dados antes de ativar.';cloudRefresh();return false}}

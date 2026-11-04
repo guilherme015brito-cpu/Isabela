@@ -13,7 +13,59 @@
     for(const p of doc.projects)if(!Number.isFinite(p.target)||p.target<=0)throw Error('Um plano tem meta inválida.');
     for(const t of doc.transactions)if(!Number.isFinite(parseDate(t.date))||!Number.isFinite(t.amount)||t.amount<=0||!['in','out'].includes(t.type)||!doc.banks.some(b=>b.id===t.bank)||(t.project&&!doc.projects.some(p=>p.id===t.project)))throw Error('Uma movimentação ficou sem banco ou plano. Revise os registros antes de sincronizar.');
     assertNutrition(doc.settings.nutrition);
+    assertShopping(doc.settings.shopping);
     return doc;
+  }
+  function assertShopping(data){
+    if(data===undefined)return;
+    const invalid=()=>{throw Error('As listas de compras são inválidas. Revise a cópia antes de sincronizar.')};
+    const records=items=>{
+      if(!Array.isArray(items))invalid();
+      const ids=new Set();
+      for(const item of items){if(!item||typeof item.id!=='string'||!item.id.trim()||item.id.length>180||ids.has(item.id))invalid();ids.add(item.id)}
+    };
+    const name=(value,max)=>typeof value==='string'&&value.trim().length>0&&value.length<=max;
+    if(!data||typeof data!=='object'||Array.isArray(data))invalid();
+    records(data.lists);
+    for(const list of data.lists){
+      if(!name(list.name,100))invalid();records(list.items);
+      for(const item of list.items)if(!name(item.name,200)||typeof item.done!=='boolean')invalid();
+    }
+    return data;
+  }
+  // Lists and items have stable IDs: independent purchases can merge offline.
+  // Deleting a list while another device edits it still requires a user choice.
+  function mergeShopping(base,local,remote,choose){
+    if(local===undefined||remote===undefined)return choose('settings:shopping',base,local,remote,'Listas de compras');
+    const records=(b,l,r,prefix,combine)=>{
+      const bm=new Map((b||[]).map(v=>[v.id,v])),lm=new Map(l.map(v=>[v.id,v])),rm=new Map(r.map(v=>[v.id,v]));
+      const result=[];
+      for(const id of new Set([...rm.keys(),...lm.keys(),...bm.keys()])){
+        const bv=bm.get(id),lv=lm.get(id),rv=rm.get(id),label=(lv||rv||bv).name;
+        const value=lv&&rv?combine(bv,lv,rv,prefix+':'+id,label):choose(prefix+':'+id,bv,lv,rv,label);
+        if(value!==undefined)result.push(value);
+      }
+      return result;
+    };
+    return {lists:records(base?.lists,local.lists,remote.lists,'shopping',(b,l,r,key,label)=>({
+      id:l.id,
+      name:choose(key+':name',b?.name,l.name,r.name,'Nome da lista: '+label),
+      items:records(b?.items,l.items,r.items,key+':item',(bi,li,ri,itemKey,itemLabel)=>({
+        id:li.id,
+        name:choose(itemKey+':name',bi?.name,li.name,ri.name,'Item: '+itemLabel),
+        done:choose(itemKey+':done',bi?.done,li.done,ri.done,'Compra: '+itemLabel)
+      }))
+    }))};
+  }
+  function preferLocalShopping(local,remote){
+    if(!local||!remote)return clone(local||remote);
+    const lists=new Map(remote.lists.map(list=>[list.id,clone(list)]));
+    for(const list of local.lists){
+      const items=new Map((lists.get(list.id)?.items||[]).map(item=>[item.id,item]));
+      for(const item of list.items)items.set(item.id,clone(item));
+      lists.set(list.id,{...clone(list),items:[...items.values()]});
+    }
+    return {lists:[...lists.values()]};
   }
   function assertNutrition(data){
     if(data===undefined)return;
@@ -46,16 +98,22 @@
       for(const id of ids){const record=choose(collection+':'+id,b.get(id),l.get(id),r.get(id),(l.get(id)||r.get(id)||b.get(id))?.name||'Registro da escala');if(record!==undefined)result[collection].push(record)}
     }
     for(const key of new Set([...Object.keys(base?.settings||{}),...Object.keys(local.settings),...Object.keys(remote.settings)])){
+      if(key==='shopping'){
+        const value=mergeShopping(base?.settings?.shopping,local.settings.shopping,remote.settings.shopping,choose);
+        if(value!==undefined)result.settings.shopping=value;
+        continue;
+      }
       const value=choose('settings:'+key,base?.settings?.[key],local.settings[key],remote.settings[key],key==='notifications'?'Preferências de notificações':key==='nutrition'?'Planejamentos alimentares e antropometria':'Configuração: '+key);if(value!==undefined)result.settings[key]=value;
     }
     return {data:result,conflicts};
   }
   function preferLocal(local,remote){
     const result={settings:{...clone(remote.settings),...clone(local.settings)}};
+    if(local.settings.shopping||remote.settings.shopping)result.settings.shopping=preferLocalShopping(local.settings.shopping,remote.settings.shopping);
     for(const key of collections){const records=new Map(remote[key].map(item=>[item.id,clone(item)]));for(const item of local[key])records.set(item.id,clone(item));result[key]=[...records.values()]}
     return result;
   }
   // Aplicar um snapshot não pode apagar alterações feitas enquanto a rede respondia.
   function rebase(sent,current,acknowledged){return merge(sent,current,acknowledged)}
-  return {collections,clone,stable,equal,canonical,assertDocument,merge,rebase,preferLocal,assertNutrition};
+  return {collections,clone,stable,equal,canonical,assertDocument,merge,rebase,preferLocal,assertNutrition,assertShopping};
 });
