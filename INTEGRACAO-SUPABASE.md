@@ -47,3 +47,7 @@ Sincronização acontece com o app aberto. Notificações push com o app fechado
 ## Nutrição
 
 Planejamentos, refeições e avaliações antropométricas integram o campo privado settings.nutrition e os backups. O PIN 0000 libera a edição dos formulários no app; não substitui a autenticação de cada aparelho no Supabase. Nenhuma migração SQL adicional é necessária.
+
+## Compras
+
+Listas de compras e seus itens integram `settings.shopping`, com sincronização e backups pelo fluxo existente. Alterações em listas e itens diferentes são combinadas por identificador; alterações incompatíveis no mesmo registro aparecem na revisão em Configurações. Não há migração SQL nem alteração das permissões existentes. Veja `COMPRAS.md` para comportamento, referências e testes.

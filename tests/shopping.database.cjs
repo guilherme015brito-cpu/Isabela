@@ -1,0 +1,50 @@
+// npm install --no-save --package-lock=false @electric-sql/pglite
+// node tests/shopping.database.cjs
+const {PGlite} = require(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const core = require('../dist/cloud-core.js');
+const db = new PGlite();
+const owner='00000000-0000-4000-8000-000000000001';
+const second='00000000-0000-4000-8000-000000000002';
+async function main(){
+  await db.exec(`create role anon; create role authenticated; create schema auth;
+    create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
+    create function auth.uid() returns uuid language sql as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
+    insert into auth.users values ('${owner}','test@example.invalid',now()),('${second}','second@example.invalid',now());`);
+  await db.exec(fs.readFileSync(require.resolve('../supabase/integration.sql'),'utf8'));
+  await db.exec("insert into private.isabela_allowed_emails values ('test@example.invalid'),('second@example.invalid');");
+  await db.query("select set_config('test.uid',$1,false)",[owner]);
+  const sync=async(revision,document)=>(await db.query('select public.isabela_sync($1,$2::jsonb) as result',[revision,JSON.stringify(document)])).rows[0].result;
+  const load=async()=>(await db.query('select public.isabela_load() as result')).rows[0].result;
+  const original=core.canonical({settings:{theme:'rose',nutrition:{plans:[],measurements:[]}},banks:[{id:'bank',name:'Banco',initial:100}]});
+  await db.exec('set role authenticated');
+  await sync(0,original);
+  const document=structuredClone(original);
+  document.settings.shopping={lists:[{id:'market',name:'Mercado',items:[{id:'beans',name:'Feijão',done:false},{id:'rice',name:'Arroz',done:true}]}]};
+  const saved=await sync(1,document);
+  assert.equal(saved.revision,2);
+  assert.deepEqual((await load()).data,document);
+  console.log('PASS existing SQL round-trips shopping and preserves other data without a migration');
+  const stale=await sync(1,original);
+  assert.equal(stale.conflict,true);assert.deepEqual(stale.data,document);
+  console.log('PASS stale revision cannot overwrite purchases');
+  document.settings.shopping.lists[0].items[0].done=true;
+  assert.deepEqual((await sync(2,document)).data.settings.shopping,document.settings.shopping);
+  console.log('PASS completed items persist');
+  await assert.rejects(db.query('select * from public.isabela_settings'),/permission denied/);
+  console.log('PASS direct table access remains blocked');
+  await db.query("select set_config('test.uid',$1,false)",[second]);
+  assert.equal((await load()).data,null);
+  console.log('PASS another authorized owner cannot see the shopping lists');
+  await db.query("select set_config('test.uid',$1,false)",[owner]);
+  document.settings.shopping.lists=[];
+  assert.deepEqual((await sync(3,document)).data.settings.shopping,{lists:[]});
+  assert.deepEqual((await load()).data.banks,original.banks);
+  console.log('PASS deleting a list preserves existing bank data');
+  await db.exec('reset role; set role anon');
+  await assert.rejects(load(),/permission denied/);
+  console.log('PASS anonymous RPC access remains blocked');
+  console.log('7 database checks passed. No production database was accessed.');
+}
+main().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>db.close());
